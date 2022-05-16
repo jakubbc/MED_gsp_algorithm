@@ -51,3 +51,29 @@ def read_spmf_txt(fname: str, load_times: bool = False) -> list:
                 line = f.readline()
 
     return seqs, seqs_times
+
+
+def load_test_data() -> list:
+    """ Generate simple data for easier testing
+    :return (seqs, seq_times):
+            seqs: list of sequences
+            seq_times: list of transaction times corresponding to seqs
+        :rtype: (list, list)
+    """
+
+    seqs = [
+            [[1], [2]],
+            [[1], [3], [4], [5], [1]],
+            [[2], [3], [4], [6]],
+            [[1], [2], [3], [4]],
+            [[1], [2], [3], [6]]
+        ]
+    seqs_times = [
+            [1, 2],
+            [1, 2, 3, 4, 5],
+            [1, 2, 3, 4],
+            [1, 2, 3, 4],
+            [1, 2, 3, 4]
+        ]
+
+    return seqs, seqs_times
