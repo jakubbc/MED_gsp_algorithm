@@ -12,7 +12,7 @@ from gsp_algorithm import gsp_algorithm
 from gsp_test import TestGSP
 
 data_sources = ['bike', 'retail', 'leviathan']
-data_ind = 1
+data_ind = 0
 
 if __name__ == "__main__":
 
