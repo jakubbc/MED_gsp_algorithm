@@ -12,7 +12,9 @@ from gsp_algorithm import gsp_algorithm
 from gsp_test import TestGSP
 
 data_sources = ['bike', 'retail', 'leviathan']
-data_ind = 0
+data_ind = 2
+minsup = 0.3
+
 
 if __name__ == "__main__":
 
@@ -20,5 +22,7 @@ if __name__ == "__main__":
     seqs, seqs_times = read_spmf_txt(data_sources[data_ind])
     # print(seqs[0:10])
     # print(seqs_times[0:10])
-    gsp_algorithm(seqs, seqs_times)
+    freq_seqs = gsp_algorithm(seqs, seqs_times, minsup, data_ind)
+    print()
+    print(freq_seqs)
     # TestGSP().test_supermarket()
