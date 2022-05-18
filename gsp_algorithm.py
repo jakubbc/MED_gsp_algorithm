@@ -281,12 +281,12 @@ def gsp_algorithm(seqs: list, seqs_times: list, dname, minsup: float = 0.2) -> d
         :return freq_seqs: frequent sequences found in seqs
         :rtype: dict
         """
-    print(f'\nMin support: {minsup} = ', end='')
+    # print(f'\nMin support: {minsup} = ', end='')
     minsup *= len(seqs)
-    print(f'{minsup}')
-    print(f'wSize: {config.wSize}')
-    print(f'minGap: {config.minGap}')
-    print(f'maxGap: {config.maxGap}')
+    # print(f'{minsup}')
+    # print(f'wSize: {config.wSize}')
+    # print(f'minGap: {config.minGap}')
+    # print(f'maxGap: {config.maxGap}')
     c_len = 1
     freq_seqs = {c_len: {}}
 
@@ -327,55 +327,22 @@ def gsp_algorithm(seqs: list, seqs_times: list, dname, minsup: float = 0.2) -> d
         with open(f'data/help/{dname}_tid_list.pkl', 'wb') as f:
             pickle.dump(tid_list, f)
 
-    # ver 2
-    # for sid, seq in enumerate(seqs):
-    #     for tid, tran in enumerate(seq):
-    #         for c in candidates:
-    #             if c in tran:
-    #                 if c not in tid_list:
-    #                     tid_list[c] = {sid: [seqs_times[sid][tid]]}
-    #                 elif sid not in tid_list[c]:
-    #                     tid_list[c][sid] = [seqs_times[sid][tid]]
-    #                 else:
-    #                     tid_list[c][sid].append(seqs_times[sid][tid])
-    # for c in candidates:
-    #     sup = len(tid_list[c])
-    #     if sup > minsup:
-    #         freq_seqs[c_len][tuple([c])] = sup
-
-    # old version, multiple passes of data set
-    # for c in candidates:
-    #     count = 0
-    #     for seq in seqs:
-    #         for tran in seq:
-    #             if c in tran:
-    #                 count += 1
-    #                 break
-    # count += tran.count(c)
-    # if count > minsup:
-    #     freq_seqs[tuple([c])] = count
-    # # print(count)
-
-    # print(freq_seqs)
-    print(f'Sequences for iterations: {len(tid_list)}')
-    print()
-    # print(seqs[3])
-    # print(tid_list[3])
-    # print(time.time() - start)
+    # print(f'Sequences for iterations: {len(tid_list)}')
+    # print()
 
     # repeat as long as frequent sequences generated
     while len(freq_seqs[c_len]) > 0:
         c_len += 1
-        print(f'Current candidate len: {c_len}')
+        # print(f'Current candidate len: {c_len}')
         candidates = generate_candidates(list(freq_seqs[c_len - 1].keys()))
-        print(f'Candidates: {len(candidates)}')
+        # print(f'Candidates: {len(candidates)}')
         # print(candidates)
         candidates_pruned = prune_candidates(candidates, list(freq_seqs[c_len - 1].keys()))
-        print(f'Candidates pruned: {len(candidates_pruned)}')
+        # print(f'Candidates pruned: {len(candidates_pruned)}')
         freq_seqs[c_len] = find_freq_seqs(candidates_pruned, tid_list, minsup)
-        print(f'Found freq_seqs: {len(freq_seqs[c_len])}')
+        # print(f'Found freq_seqs: {len(freq_seqs[c_len])}')
         # print(freq_seqs[c_len])
-        print()
+        # print()
 
     freq_seqs.popitem()
     return freq_seqs
