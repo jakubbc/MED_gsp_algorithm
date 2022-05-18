@@ -5,18 +5,13 @@
 Author: Jakub Ciemięga
 """
 import pickle
-import time
-import numpy as np
+# import time
+# import numpy as np
 import itertools
 from operator import itemgetter
-import json
 
-# from main import wSize, minGap, maxGap
-
-
-wSize = 10
-minGap = 0
-maxGap = 1000
+# from config import wSize, minGap, maxGap
+import config
 
 
 def common_element(list1: list, list2: list) -> bool:
@@ -38,9 +33,7 @@ def generate_candidates(prev_seqs: dict) -> list:
         :return candidates: candidates of k length for frequent sequences
         :rtype: list
     """
-    # prev_seqs = [((3005, 1, 2, 3), 1000, 2000), ((1, 2), 3), ((1000, 1), (3030, 2),), (1, (3, 4)), (3042,),
-    #              (3069, (1, 2, 3),), (3,), (2, 3, 5)]
-    # print(prev_seqs)
+
     candidates = []
     seqs_no_first = {}
     seqs_no_last = {}
@@ -86,6 +79,10 @@ def generate_candidates(prev_seqs: dict) -> list:
                     candidates.append(tuple(list(prev_seqs[i]) + [prev_seqs[j][-1]]))
                 else:
                     candidates.append(prev_seqs[i][:-1] + (prev_seqs[j][-1],))
+
+    # get unique values
+    seen = set()
+    candidates = [x for x in candidates if not (x in seen or seen.add(x))]
 
     return candidates
 
@@ -140,21 +137,23 @@ def seq_c_sup(seq_tids: dict, c: tuple) -> bool:
     """ Check if given sequence (represented by a transaction time list for all elements) supports a candidate
     """
 
-    def add_times(el_ind: int):
-        el = c[el_ind]
+    def add_times(el_i: int):
+        """Add list of tuples (start_time, end_time) to el_times for given el_i corresponding to given candidate c
+        """
+        el = c[el_i]
         if type(el) is not tuple:
             if el in seq_tids:
                 for t in seq_tids[el]:
-                    el_times[el_ind].append((t, t))
+                    el_times[el_i].append((t, t))
         elif all(it in seq_tids for it in el):
             # print(el)
             # print(seq_tids)
             # print(all (it in seq_tids for it in el))
             for times in itertools.product(*itemgetter(*el)(seq_tids)):
-                if max(times) - min(times) <= wSize and (min(times), max(times)) not in el_times[el_ind]:
-                    el_times[el_ind].append((min(times), max(times)))
+                if max(times) - min(times) <= config.wSize and (min(times), max(times)) not in el_times[el_i]:
+                    el_times[el_i].append((min(times), max(times)))
                 # print(times)
-        el_times_done[el_ind] = True
+        el_times_done[el_i] = True
 
     # c = ((1, 2, 3), 1, 2, 4)
     # seq_tids = {1: [10, 20, 21], 2: [15, 25, 30], 3: [5, 10, 15], 4: [45]}
@@ -185,12 +184,12 @@ def seq_c_sup(seq_tids: dict, c: tuple) -> bool:
             # print(el_ind)
             # print(t1, t2)
             # print(el_times)
-            if t1_new - t2 <= minGap:
+            if t1_new - t2 <= config.minGap:
                 # if (c[el_ind - 1] == c[el_ind] and t1_new - t2 <= minGap) or (
                 #         c[el_ind - 1] != c[el_ind] and t1_new - t2 < minGap):
                 del el_times[el_ind][0]
                 continue
-            if t2_new - t1 > maxGap:
+            if t2_new - t1 > config.maxGap:
                 del el_times[el_ind - 1][0]
                 t1_next, t2_next = t1_new, t2_new
                 # print('start back')
@@ -204,7 +203,7 @@ def seq_c_sup(seq_tids: dict, c: tuple) -> bool:
             # print(el_ind)
             # print(t1, t2)
             # print(el_times)
-            if t2_next - t1 > maxGap:
+            if t2_next - t1 > config.maxGap:
                 del el_times[el_ind][0]
                 continue
             if 0 == el_ind:
@@ -214,7 +213,7 @@ def seq_c_sup(seq_tids: dict, c: tuple) -> bool:
                 continue
             t1_prev, t2_prev = el_times[el_ind - 1][0]
             # only check for maxGap
-            if t2 - t1_prev > maxGap:
+            if t2 - t1_prev > config.maxGap:
                 del el_times[el_ind - 1][0]
                 el_ind -= 1
                 continue
@@ -226,11 +225,8 @@ def seq_c_sup(seq_tids: dict, c: tuple) -> bool:
     return True
 
 
-def find_freq_seqs(c_len: int, candidates: list, tid_list: dict, minsup: int) -> dict:
+def find_freq_seqs(candidates: list, tid_list: dict, minsup: int) -> dict:
     """ Find generalized frequent sequences among candidates based on wSize, minGap and maxGap
-
-        :param c_len: length of candidates
-        :type c_len: int
 
         :param candidates: candidates to find freq_seqs among
         :type candidates: list
@@ -260,14 +256,14 @@ def find_freq_seqs(c_len: int, candidates: list, tid_list: dict, minsup: int) ->
             if seq_c_sup(tid_list[sid], c):
                 sups[cid] += 1
     print(f'\nMaximum support found: {max(sups)}')
-    # print(f'{max(sups)=}')
+    # print(f'Maximum support found: {max(sups)}')
     for i in range(len(sups)):
         if sups[i] > minsup:
             new_freq_seqs[candidates[i]] = sups[i]
     return new_freq_seqs
 
 
-def gsp_algorithm(seqs: list, seqs_times: list, minsup: float = 0.2, d_ind=0) -> dict:
+def gsp_algorithm(seqs: list, seqs_times: list, dname, minsup: float = 0.2) -> dict:
     """ Run the gsp algorithm
 
         :param seqs: sequences to apply the algorithm to
@@ -276,15 +272,21 @@ def gsp_algorithm(seqs: list, seqs_times: list, minsup: float = 0.2, d_ind=0) ->
         :param seqs_times: sequences' transactions times
         :type seqs_times: list
 
+        :param dname: dataset name for reading and saving help files with supports and tid_list
+        :type minsup: str
+
         :param minsup: minimum sequence support defined as a fraction of sequence number
         :type minsup: float
 
         :return freq_seqs: frequent sequences found in seqs
         :rtype: dict
         """
-
+    print(f'\nMin support: {minsup} = ', end='')
     minsup *= len(seqs)
-    print(f'Min support: {minsup}')
+    print(f'{minsup}')
+    print(f'wSize: {config.wSize}')
+    print(f'minGap: {config.minGap}')
+    print(f'maxGap: {config.maxGap}')
     c_len = 1
     freq_seqs = {c_len: {}}
 
@@ -296,11 +298,11 @@ def gsp_algorithm(seqs: list, seqs_times: list, minsup: float = 0.2, d_ind=0) ->
     # start = time.time()
     tid_list = {}
     try:
-        with open(f'data/{d_ind}_sups.txt', 'r') as f:
+        with open(f'data/help/{dname}_sups.txt', 'r') as f:
             sups = [int(x) for x in f.read()[1:-1].split(', ')]
-        with open(f'data/{d_ind}_tid_list.pkl', 'rb') as f:
+        with open(f'data/help/{dname}_tid_list.pkl', 'rb') as f:
             tid_list = pickle.load(f)
-    except:
+    except FileNotFoundError:
         print('Cannot find files with supports or tid_list, loading raw data files and saving help files.')
         # ver 3
         sups = [0] * len(candidates)
@@ -320,9 +322,9 @@ def gsp_algorithm(seqs: list, seqs_times: list, minsup: float = 0.2, d_ind=0) ->
             if sups[cid] > minsup:
                 freq_seqs[c_len][tuple([c])] = sups[cid]
 
-        with open(f'data/{d_ind}_sups.txt', 'w') as f:
+        with open(f'data/help/{dname}_sups.txt', 'w') as f:
             f.write(str(sups))
-        with open(f'data/{d_ind}_tid_list.pkl', 'wb') as f:
+        with open(f'data/help/{dname}_tid_list.pkl', 'wb') as f:
             pickle.dump(tid_list, f)
 
     # ver 2
@@ -370,43 +372,10 @@ def gsp_algorithm(seqs: list, seqs_times: list, minsup: float = 0.2, d_ind=0) ->
         # print(candidates)
         candidates_pruned = prune_candidates(candidates, list(freq_seqs[c_len - 1].keys()))
         print(f'Candidates pruned: {len(candidates_pruned)}')
-        freq_seqs[c_len] = find_freq_seqs(c_len, candidates_pruned, tid_list, minsup)
+        freq_seqs[c_len] = find_freq_seqs(candidates_pruned, tid_list, minsup)
         print(f'Found freq_seqs: {len(freq_seqs[c_len])}')
         # print(freq_seqs[c_len])
         print()
 
     freq_seqs.popitem()
     return freq_seqs
-
-# # the set of frequent 1-sequence: all singleton sequences
-# # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
-# # candidate
-# candidates = self.unique_candidates
-#
-# # scan transactions to collect support count for each candidate
-# # sequence & filter
-# self.freq_patterns.append(self._support(candidates, minsup))
-#
-# # (k-itemsets/k-sequence = 1)
-# k_items = 1
-#
-# self._print_status(k_items, candidates)
-#
-# # repeat until no frequent sequence or no candidate can be found
-# while len(self.freq_patterns[k_items - 1]) and (k_items + 1 <= self.max_size):
-#     k_items += 1
-#
-#     # Generate candidate sets Ck (set of candidate k-sequences) -
-#     # generate new candidates from the last "best" candidates filtered
-#     # by minimum support
-#     items = np.unique(
-#         list(set(self.freq_patterns[k_items - 2].keys())))
-#
-#     candidates = list(product(items, repeat=k_items))
-#
-#     # candidate pruning - eliminates candidates who are not potentially
-#     # frequent (using support as threshold)
-#     self.freq_patterns.append(self._support(candidates, minsup))
-#
-#     self._print_status(k_items, candidates)
-# return self.freq_patterns[:-1]
