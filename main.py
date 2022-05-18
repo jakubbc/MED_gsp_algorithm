@@ -12,17 +12,17 @@ from gsp_algorithm import gsp_algorithm
 from gsp_test import TestGSP
 
 data_sources = ['bike', 'retail', 'leviathan']
-data_ind = 2
-minsup = 0.3
+data_ind = 1
+minsup = 0.2
 
 
 if __name__ == "__main__":
 
     # seqs, seqs_times = load_test_data()
     seqs, seqs_times = read_spmf_txt(data_sources[data_ind])
-    # print(seqs[0:10])
-    # print(seqs_times[0:10])
     freq_seqs = gsp_algorithm(seqs, seqs_times, minsup, data_ind)
     print()
+    print('Sequences found with supports:')
     print(freq_seqs)
+    print(f'\nNumber of sequences: {sum(len(v) for v in freq_seqs.values())}')
     # TestGSP().test_supermarket()
