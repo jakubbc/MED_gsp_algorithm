@@ -18,24 +18,25 @@ def experiments():
     config.data_ind = 0
     config.dname = config.data_sources[config.data_ind]
 
-    config.minsup = 0.05
+    config.minsup = 0.12
     config.wSize = 10
     config.minGap = 5
     config.maxGap = 20
 
-    for d_ind in [0]:
+    for d_ind in [0, 1, 2]:
         config.data_ind = d_ind
         config.dname = config.data_sources[config.data_ind]
         print(config.dname)
-        for v in [10, 15]:
+        for v in [0, 10, 15]:
+            # change desired parameter
             config.maxGap = v
-            print(v)
-            seqs, seqs_times = read_spmf_txt(config.dname)
+            print(f'parameter value: {v}')
+            test_seqs, test_seqs_times = read_spmf_txt(config.dname)
             start = time.time()
-            freq_seqs = gsp_algorithm(seqs, seqs_times, config.dname, config.minsup)
-            print(time.time() - start)
-            print(f'\nNumber of sequences: {sum(len(v) for v in freq_seqs.values())}')
-            # print(f'\nSequences found with supports:\n{freq_seqs}')
+            test_freq_seqs = gsp_algorithm(test_seqs, test_seqs_times, config.dname, config.minsup)
+            print(f'Time: {round(time.time() - start, 1)}s')
+            print(f'Number of sequences: {sum(len(v) for v in test_freq_seqs.values())}\n')
+            # print(f'Sequences found with supports:\n{test_freq_seqs}')
 
 
 if __name__ == "__main__":
@@ -45,11 +46,11 @@ if __name__ == "__main__":
         test_prune_candidates()
         test_seq_c_sup()
 
+    if config.conduct_experiments:
+        experiments()
+
     # seqs, seqs_times = load_test_data()
     seqs, seqs_times = read_spmf_txt(config.dname)
     freq_seqs = gsp_algorithm(seqs, seqs_times, config.dname, config.minsup)
     print(f'\nSequences found with supports:\n{freq_seqs}')
     print(f'\nNumber of sequences: {sum(len(v) for v in freq_seqs.values())}')
-    
-    # experiments()
-
