@@ -14,7 +14,7 @@ from unit_tests import test_generate_candidates, test_prune_candidates, test_seq
 
 
 def experiments():
-    """Check algorithms results and performance for various parameter values and datasets"""
+    """Check algorithms results and time for various parameter values and datasets"""
     config.data_ind = 0
     config.dname = config.data_sources[config.data_ind]
 
@@ -39,6 +39,16 @@ def experiments():
             # print(f'Sequences found with supports:\n{test_freq_seqs}')
 
 
+# def performance_experiment():
+#     """Check algorithms results and time for number of Leviathan data"""
+#
+#     seqs, seqs_times = read_spmf_txt(config.dname)
+#     for
+#     freq_seqs = gsp_algorithm(seqs, seqs_times, config.dname, config.minsup)
+#     print(f'\nSequences found with supports:\n{freq_seqs}')
+#     print(f'\nNumber of sequences: {sum(len(v) for v in freq_seqs.values())}')
+
+
 if __name__ == "__main__":
 
     if config.conduct_unit_tests:
@@ -49,8 +59,13 @@ if __name__ == "__main__":
     if config.conduct_experiments:
         experiments()
 
+    # if config.conduct_performance_experiment:
+    #     performance_experiment()
+
     # seqs, seqs_times = load_test_data()
     seqs, seqs_times = read_spmf_txt(config.dname)
+    start = time.time()
     freq_seqs = gsp_algorithm(seqs, seqs_times, config.dname, config.minsup)
-    print(f'\nSequences found with supports:\n{freq_seqs}')
+    print(f'Time: {round(time.time() - start, 1)}s')
+    # print(f'\nSequences found with supports:\n{freq_seqs}')
     print(f'\nNumber of sequences: {sum(len(v) for v in freq_seqs.values())}')

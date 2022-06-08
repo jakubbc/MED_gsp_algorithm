@@ -7,7 +7,11 @@ Author: Jakub Ciemięga
 
 import pickle
 import itertools
+from copy import copy
 from operator import itemgetter
+
+import numpy as np
+
 import config
 
 
@@ -313,6 +317,7 @@ def gsp_algorithm(seqs: list, seqs_times: list, dname, minsup: float = 0.2) -> d
                             sups[cid] += 1
                         else:
                             tid_list[sid][c].append(seqs_times[sid][tid])
+
     # find frequent sequences of length 1
     finally:
         for cid, c in enumerate(candidates):
@@ -323,6 +328,16 @@ def gsp_algorithm(seqs: list, seqs_times: list, dname, minsup: float = 0.2) -> d
             f.write(str(sups))
         with open(f'data/help/{dname}_tid_list.pkl', 'wb') as f:
             pickle.dump(tid_list, f)
+    # for performance experiment
+    # minsup *= 4
+    # keys = list(tid_list.keys())
+    # keys_len = len(keys)
+    # for key in keys:
+    #     tid_list[key + keys_len] = tid_list[key]
+    # for key in keys:
+    #     tid_list[key + 2 * keys_len] = tid_list[key]
+    # for key in keys:
+    #     tid_list[key + 3 * keys_len] = tid_list[key]
 
     # repeat as long as frequent sequences generated
     while len(freq_seqs[c_len]) > 0:
